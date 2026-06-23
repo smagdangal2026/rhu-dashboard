@@ -254,7 +254,7 @@ async function renderMapAndTable(stats, disease, formattedLabel) {
       else radius = 8;
 
       const marker = L.circleMarker(center, {
-        radius,
+        radius: 20,
         color: "purple",
         fillColor: "violet",
         fillOpacity: 0.6,
