@@ -249,7 +249,7 @@ async function renderMapAndTable(stats, disease, formattedLabel) {
       const total = (s.male || 0) + (s.female || 0) + (s.age10_14 || 0) + (s.age15_19 || 0);
       popupContent += `Total: ${total}<br><i>Reported: ${formattedLabel}</i>`;
 
-      // --- Radius scaling (diretsong logic) ---
+      // --- Radius scaling ---
       let radius;
       if (total >= 50) {
         radius = 30;
@@ -263,22 +263,31 @@ async function renderMapAndTable(stats, disease, formattedLabel) {
         radius = 10;
       }
 
-      // --- Marker ---
-      const marker = L.circleMarker(center, {
+      // --- Circle (visual only) ---
+      L.circleMarker(center, {
         radius,
         color: "purple",
         fillColor: "violet",
         fillOpacity: 0.7,
-        interactive: true
+        interactive: false // visual lang, hindi sumasalo ng tap
       }).addTo(map);
 
-      marker.bindPopup(popupContent);
+      // --- Invisible marker (hitbox same size as circle) ---
+      const hitbox = L.marker(center, {
+        icon: L.divIcon({
+          className: "hitbox",
+          iconSize: [radius*2, radius*2], // kasing laki ng circle
+          html: "", // walang laman, invisible
+        })
+      }).addTo(map);
+
+      hitbox.bindPopup(popupContent);
 
       // --- Event handlers for desktop + mobile ---
-      marker.on("click", () => marker.openPopup());
-      marker.on("tap", () => marker.openPopup());
-      marker.on("touchstart", () => marker.openPopup());
-      marker.on("touchend", () => marker.openPopup());
+      hitbox.on("click", () => hitbox.openPopup());
+      hitbox.on("tap", () => hitbox.openPopup());
+      hitbox.on("touchstart", () => hitbox.openPopup());
+      hitbox.on("touchend", () => hitbox.openPopup());
     });
 
     // --- Table rendering ---
