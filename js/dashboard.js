@@ -206,7 +206,6 @@ async function loadData(year, month, disease, type = "monthly") {
   }
 }
 
-// === Map + Table Rendering ===
 async function renderMapAndTable(stats, disease, formattedLabel) {
   try {
     const geoResponse = await fetch("./data/geolocation.geojson");
@@ -253,25 +252,25 @@ async function renderMapAndTable(stats, disease, formattedLabel) {
 
       popupContent += `Total: ${total}<br><i>Reported: ${formattedLabel}</i>`;
 
-// --- Radius categorical sizing ---
-let radius;
-if (total >= 20) {
-  radius = 20;   // High
-} else if (total >= 10) {
-  radius = 14;   // Medium
-} else if (total > 0) {
-  radius = 10;    // Low
-} else {
-  radius = 6;    // None
-}
+      // --- Radius categorical sizing ---
+      let radius;
+      if (total >= 20) radius = 20;   // High
+      else if (total >= 10) radius = 14;   // Medium
+      else if (total > 0) radius = 10;    // Low
+      else radius = 6;    // None
 
-L.circleMarker(center, {
-  radius: radius,
-  color: "purple",
-  fillColor: "violet",
-  fillOpacity: 0.6
-}).addTo(map).bindPopup(popupContent);
+      const marker = L.circleMarker(center, {
+        radius: radius,
+        color: "purple",
+        fillColor: "violet",
+        fillOpacity: 0.6,
+        interactive: true
+      }).addTo(map);
 
+      // Bind popup for both desktop (click) and mobile (tap)
+      marker.bindPopup(popupContent);
+      marker.on("click", () => marker.openPopup());
+      marker.on("tap", () => marker.openPopup());
 
       heatPoints.push([center.lat, center.lng, total]);
     });
