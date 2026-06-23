@@ -228,6 +228,7 @@ async function renderMapAndTable(stats, disease, formattedLabel) {
         return;
       }
 
+      // --- Center point ---
       let center;
       if (feature.feature.geometry.type === "Point") {
         const [lng, lat] = feature.feature.geometry.coordinates;
@@ -236,7 +237,10 @@ async function renderMapAndTable(stats, disease, formattedLabel) {
         center = feature.getBounds().getCenter();
       }
 
+      // --- Compute total ---
       const total = computeTotal(s);
+
+      // --- Popup content ---
       let popupContent = `<b>${s.barangay}</b><br>Disease/Issue: ${disease}<br>`;
       if (disease.toLowerCase() === "teenage pregnancy") {
         popupContent += `10–14 y/o: ${s.age10_14 || 0}<br>`;
@@ -247,27 +251,32 @@ async function renderMapAndTable(stats, disease, formattedLabel) {
       }
       popupContent += `Total: ${total}<br><i>Reported: ${formattedLabel}</i>`;
 
+      // --- Marker radius (bigger for mobile tap) ---
       let radius;
-      if (total >= 20) radius = 22;
-      else if (total >= 10) radius = 16;
-      else if (total > 0) radius = 12;
-      else radius = 8;
+      if (total >= 20) radius = 26;
+      else if (total >= 10) radius = 20;
+      else if (total > 0) radius = 16;
+      else radius = 12;
 
+      // --- Marker with popup ---
       const marker = L.circleMarker(center, {
-        radius: 20,
+        radius,
         color: "purple",
         fillColor: "violet",
-        fillOpacity: 0.6,
+        fillOpacity: 0.7,
         interactive: true
       }).addTo(map);
 
       marker.bindPopup(popupContent);
+
+      // --- Event handlers for desktop + mobile ---
       marker.on("click", () => marker.openPopup());
       marker.on("tap", () => marker.openPopup());
       marker.on("touchstart", () => marker.openPopup());
       marker.on("touchend", () => marker.openPopup());
     });
 
+    // --- Table rendering ---
     renderTable(stats, disease, formattedLabel);
 
   } catch (err) {
