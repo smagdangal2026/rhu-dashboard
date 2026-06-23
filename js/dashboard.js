@@ -254,10 +254,10 @@ async function renderMapAndTable(stats, disease, formattedLabel) {
 
       // --- Radius categorical sizing ---
       let radius;
-      if (total >= 20) radius = 20;   // High
-      else if (total >= 10) radius = 14;   // Medium
-      else if (total > 0) radius = 10;    // Low
-      else radius = 6;    // None
+      if (total >= 20) radius = 22;   // High
+      else if (total >= 10) radius = 16;   // Medium
+      else if (total > 0) radius = 12;    // Low
+      else radius = 8;    // None
 
       const marker = L.circleMarker(center, {
         radius: radius,
@@ -267,16 +267,17 @@ async function renderMapAndTable(stats, disease, formattedLabel) {
         interactive: true
       }).addTo(map);
 
-      // Bind popup for both desktop (click) and mobile (tap)
+      // Bind popup for desktop + mobile
       marker.bindPopup(popupContent);
       marker.on("click", () => marker.openPopup());
       marker.on("tap", () => marker.openPopup());
+      marker.on("touchstart", () => marker.openPopup());
 
       heatPoints.push([center.lat, center.lng, total]);
     });
 
     if (heatPoints.length > 0) {
-      L.heatLayer(heatPoints, { radius:25, blur:15 }).addTo(map);
+      L.heatLayer(heatPoints, { radius: 25, blur: 15 }).addTo(map);
     }
 
     renderTable(stats, disease, formattedLabel);
