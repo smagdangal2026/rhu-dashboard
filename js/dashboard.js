@@ -229,6 +229,7 @@ async function renderMapAndTable(stats, disease, formattedLabel) {
         return;
       }
 
+      // --- Center point ---
       let center;
       if (feature.feature.geometry.type === "Point") {
         const [lng, lat] = feature.feature.geometry.coordinates;
@@ -237,6 +238,7 @@ async function renderMapAndTable(stats, disease, formattedLabel) {
         center = feature.getBounds().getCenter();
       }
 
+      // --- Popup content ---
       const total = computeTotal(s);
       let popupContent = `<b>${s.barangay}</b><br>Disease/Issue: ${disease}<br>`;
 
@@ -250,6 +252,7 @@ async function renderMapAndTable(stats, disease, formattedLabel) {
 
       popupContent += `Total: ${total}<br><i>Reported: ${formattedLabel}</i>`;
 
+      // --- Radius categorical sizing ---
       let radius;
       if (total >= 20) radius = 22;
       else if (total >= 10) radius = 16;
@@ -265,16 +268,23 @@ async function renderMapAndTable(stats, disease, formattedLabel) {
       }).addTo(map);
 
       marker.bindPopup(popupContent);
+
+      // Event handlers para sa lahat ng device
       marker.on("click", () => marker.openPopup());
       marker.on("tap", () => marker.openPopup());
       marker.on("touchstart", () => marker.openPopup());
       marker.on("touchend", () => marker.openPopup());
 
+      // Siguraduhin nasa ibabaw ng heatmap
+      marker.bringToFront();
+
       heatPoints.push([center.lat, center.lng, total]);
     });
 
+    // --- Heatmap layer (ilagay muna bago markers para hindi sila matabunan)
     if (heatPoints.length > 0) {
-      L.heatLayer(heatPoints, { radius: 25, blur: 15 }).addTo(map);
+      const heatLayer = L.heatLayer(heatPoints, { radius: 25, blur: 15 });
+      heatLayer.addTo(map);
     }
 
     renderTable(stats, disease, formattedLabel);
