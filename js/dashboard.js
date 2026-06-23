@@ -263,31 +263,29 @@ async function renderMapAndTable(stats, disease, formattedLabel) {
         radius = 10;
       }
 
-      // --- Circle (visual only) ---
-      L.circleMarker(center, {
-        radius,
-        color: "purple",
-        fillColor: "violet",
-        fillOpacity: 0.7,
-        interactive: false // visual lang, hindi sumasalo ng tap
-      }).addTo(map);
-
-      // --- Invisible marker (hitbox same size as circle) ---
-      const hitbox = L.marker(center, {
+      // --- Marker with divIcon (bilog + tap area) ---
+      const marker = L.marker(center, {
         icon: L.divIcon({
-          className: "hitbox",
-          iconSize: [radius*2, radius*2], // kasing laki ng circle
-          html: "", // walang laman, invisible
+          className: "custom-circle",
+          html: `<div style="
+            width:${radius*2}px;
+            height:${radius*2}px;
+            border-radius:50%;
+            background:violet;
+            border:2px solid purple;
+            opacity:0.7;
+          "></div>`,
+          iconSize: [radius*2, radius*2],
+          iconAnchor: [radius, radius]
         })
       }).addTo(map);
 
-      hitbox.bindPopup(popupContent);
+      marker.bindPopup(popupContent);
 
       // --- Event handlers for desktop + mobile ---
-      hitbox.on("click", () => hitbox.openPopup());
-      hitbox.on("tap", () => hitbox.openPopup());
-      hitbox.on("touchstart", () => hitbox.openPopup());
-      hitbox.on("touchend", () => hitbox.openPopup());
+      marker.on("click", () => marker.openPopup());
+      marker.on("touchstart", () => marker.openPopup());
+      marker.on("touchend", () => marker.openPopup());
     });
 
     // --- Table rendering ---
