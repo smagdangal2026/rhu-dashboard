@@ -219,7 +219,6 @@ async function renderMapAndTable(stats, disease, formattedLabel) {
     const geoLayer = L.geoJSON(geoData).addTo(map);
     const heatPoints = [];
 
-    // --- Markers ---
     stats.forEach(s => {
       const normalize = str => str.replace(/^Brgy\.?\s*/i,"").trim().toLowerCase();
       const feature = geoLayer.getLayers().find(
@@ -239,6 +238,9 @@ async function renderMapAndTable(stats, disease, formattedLabel) {
       }
 
       const total = computeTotal(s);
+      heatPoints.push([center.lat, center.lng, total]);
+
+      // --- Popup content ---
       let popupContent = `<b>${s.barangay}</b><br>Disease/Issue: ${disease}<br>`;
       if (disease.toLowerCase() === "teenage pregnancy") {
         popupContent += `10–14 y/o: ${s.age10_14 || 0}<br>`;
@@ -249,6 +251,7 @@ async function renderMapAndTable(stats, disease, formattedLabel) {
       }
       popupContent += `Total: ${total}<br><i>Reported: ${formattedLabel}</i>`;
 
+      // --- Marker ---
       let radius;
       if (total >= 20) radius = 22;
       else if (total >= 10) radius = 16;
@@ -256,7 +259,7 @@ async function renderMapAndTable(stats, disease, formattedLabel) {
       else radius = 8;
 
       const marker = L.circleMarker(center, {
-        radius: radius,
+        radius,
         color: "purple",
         fillColor: "violet",
         fillOpacity: 0.6,
@@ -264,15 +267,15 @@ async function renderMapAndTable(stats, disease, formattedLabel) {
       }).addTo(map);
 
       marker.bindPopup(popupContent);
+
+      // Event handlers para sa lahat ng device
       marker.on("click", () => marker.openPopup());
       marker.on("tap", () => marker.openPopup());
       marker.on("touchstart", () => marker.openPopup());
       marker.on("touchend", () => marker.openPopup());
-
-      heatPoints.push([center.lat, center.lng, total]);
     });
 
-    // --- Heatmap layer (add after markers) ---
+    // --- Heatmap layer (background) ---
     if (heatPoints.length > 0) {
       L.heatLayer(heatPoints, { radius: 25, blur: 15 }).addTo(map);
     }
