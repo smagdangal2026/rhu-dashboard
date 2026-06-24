@@ -218,6 +218,9 @@ async function renderMapAndTable(stats, disease, formattedLabel) {
     const geoData = await geoResponse.json();
     const geoLayer = L.geoJSON(geoData).addTo(map);
 
+    // --- Collect heatmap points ---
+    const heatPoints = [];
+
     stats.forEach(s => {
       const normalize = str => str.replace(/^Brgy\.?\s*/i,"").trim().toLowerCase();
       const feature = geoLayer.getLayers().find(
@@ -237,6 +240,9 @@ async function renderMapAndTable(stats, disease, formattedLabel) {
         center = feature.getBounds().getCenter();
       }
 
+      // --- Compute total ---
+      const total = (s.male || 0) + (s.female || 0) + (s.age10_14 || 0) + (s.age15_19 || 0);
+
       // --- Popup content ---
       let popupContent = `<b>${s.barangay}</b><br>Disease/Issue: ${disease}<br>`;
       if (disease.toLowerCase() === "teenage pregnancy") {
@@ -246,47 +252,35 @@ async function renderMapAndTable(stats, disease, formattedLabel) {
         popupContent += `Male: ${s.male || 0}<br>`;
         popupContent += `Female: ${s.female || 0}<br>`;
       }
-      const total = (s.male || 0) + (s.female || 0) + (s.age10_14 || 0) + (s.age15_19 || 0);
       popupContent += `Total: ${total}<br><i>Reported: ${formattedLabel}</i>`;
 
-      // --- Radius scaling ---
-      let radius;
-      if (total >= 50) {
-        radius = 30;
-      } else if (total >= 20) {
-        radius = 24;
-      } else if (total >= 10) {
-        radius = 18;
-      } else if (total > 0) {
-        radius = 14;
-      } else {
-        radius = 10;
-      }
+      // --- Add to heatmap points ---
+      heatPoints.push([center.lat, center.lng, total]);
 
-      // --- Marker with divIcon (bilog + tap area) ---
-      const marker = L.marker(center, {
-        icon: L.divIcon({
-          className: "custom-circle",
-          html: `<div style="
-            width:${radius*2}px;
-            height:${radius*2}px;
-            border-radius:50%;
-            background:violet;
-            border:2px solid purple;
-            opacity:0.7;
-          "></div>`,
-          iconSize: [radius*2, radius*2],
-          iconAnchor: [radius, radius]
-        })
+      // --- Circle marker (interactive, above heatmap) ---
+      const radius = total >= 50 ? 30 : total >= 20 ? 24 : total >= 10 ? 18 : total > 0 ? 14 : 10;
+      const circle = L.circleMarker(center, {
+        radius,
+        color: "purple",
+        fillColor: "violet",
+        fillOpacity: 0.7,
+        interactive: true
       }).addTo(map);
 
-      marker.bindPopup(popupContent);
+      circle.bindPopup(popupContent);
 
       // --- Event handlers for desktop + mobile ---
-      marker.on("click", () => marker.openPopup());
-      marker.on("touchstart", () => marker.openPopup());
-      marker.on("touchend", () => marker.openPopup());
+      circle.on("click", () => circle.openPopup());
+      circle.on("touchstart", () => circle.openPopup());
+      circle.on("touchend", () => circle.openPopup());
     });
+
+    // --- Heatmap layer (added first, background) ---
+    if (heatPoints.length > 0) {
+      const heatLayer = L.heatLayer(heatPoints, { radius: 25, blur: 15, maxZoom: 17 });
+      heatLayer.addTo(map);
+      heatLayer.bringToBack(); // siguradong nasa ilalim
+    }
 
     // --- Table rendering ---
     renderTable(stats, disease, formattedLabel);
